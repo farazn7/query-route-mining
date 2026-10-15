@@ -3,7 +3,7 @@
 A study of frequent itemset mining, association rules, and classification for
 routing assistant requests to document retrieval, internet search, or a direct answer.
 
-**Status:** dataset cleaning and column preparation are implemented. Route labelling
+**Status:** dataset cleaning, column preparation, and integration are implemented. Route labelling
 and the three-route classifier are not complete. No accuracy improvement is claimed.
 
 ## Setup
@@ -28,12 +28,15 @@ Run from the repository root:
 & '.\.venv\Scripts\python.exe' -B scripts/phase_1/download_data.py
 & '.\.venv\Scripts\python.exe' -B scripts/phase_1/clean_datasets.py
 & '.\.venv\Scripts\python.exe' -B scripts/phase_1/prepare_columns.py
+& '.\.venv\Scripts\python.exe' -B scripts/phase_2/integrate_datasets.py
 ```
 
-These three scripts use only Python's standard library, so installing requirements
+These scripts use only Python's standard library, so installing requirements
 is optional if you only need data preparation. Downloads remain in `data/raw/`,
 cleaned copies in `data/cleaned/`, and separate annotation tables in `data/prepared/`.
-These directories are excluded from Git. Existing annotation files are not overwritten.
+The combined candidates are in `data/integrated/queries.csv`, with metadata and a
+repeated-input review file alongside them. All data directories are excluded from
+Git. Existing annotation files are not overwritten.
 
 The prepared tables share `id`, `prompt`, `user_context`, `route`, and `label_reason`.
 Route labels initially remain blank. Answers and source annotations are stored in
@@ -53,6 +56,7 @@ a fresh Jupyter installation has not been tested in this project.
 ## Layout
 
 - `scripts/phase_1/`: download, clean, and prepare the datasets.
+- `scripts/phase_2/`: integrate the prepared tables and review metadata.
 - `scripts/tools/`: notebook generation and validation helpers.
 - `notebooks/data_preparation.ipynb`: one executable walkthrough.
 - `data/`: local datasets and generated outputs, excluded from Git.

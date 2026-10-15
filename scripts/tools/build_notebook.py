@@ -19,7 +19,7 @@ def add(kind, source):
 add("markdown", """
 # Data preparation
 
-Download, inspect, clean, and align Dolly-15k and FreshQA. The datasets remain separate.
+Download, inspect, clean, align, and combine Dolly-15k and FreshQA.
 """)
 add("markdown", """
 ## Setup
@@ -191,12 +191,55 @@ for name, original in cleaned_sources.items():
     print(name, ":", len(prepared), "rows;", sum(bool(row["route"]) for row in prepared), "route labels assigned")
     for row in prepared[:2]:
         print({"id": row["id"], "prompt_preview": row["prompt"][:100], "route": row["route"]})
-print("Validation passed. No datasets were merged and no route labels were generated.")
+print("Prepared tables validated.")
+""")
+add("markdown", """
+## Integrate
+
+Combine the prepared tables. Preserve labels and metadata; flag repeated inputs for review.
+""")
+integration_source = (ROOT / "scripts" / "phase_2" / "integrate_datasets.py").read_text(encoding="utf-8")
+integration_source = integration_source.replace("PROJECT = Path(__file__).resolve().parents[2]", "PROJECT = PROJECT_ROOT")
+integration_source = integration_source.split('\nif __name__ == "__main__":', 1)[0]
+integration_helpers, integration_run = integration_source.split("def integrate(record_date=None):", 1)
+add("code", integration_helpers)
+add("code", "def integrate(record_date=None):" + integration_run)
+add("code", r"""
+INTEGRATED_DIR = PROJECT_ROOT / "data" / "integrated"
+expected_integrated = ["queries.csv", "metadata.jsonl", "review.csv", "integration_audit.json"]
+present = [(INTEGRATED_DIR / name).exists() for name in expected_integrated]
+if any(present) and not all(present):
+    raise RuntimeError("Partial integrated output exists; inspect it before continuing.")
+if all(present):
+    print("Kept existing integrated files and annotations.")
+else:
+    integrate(record_date=RUN_DATE)
+integration_audit = json.loads((INTEGRATED_DIR / "integration_audit.json").read_text(encoding="utf-8"))
+for relative_path, checksum in integration_audit["input_sha256"].items():
+    assert hashlib.sha256((PROJECT_ROOT / relative_path).read_bytes()).hexdigest() == checksum, "Prepared inputs changed; review the integration."
+with (INTEGRATED_DIR / "queries.csv").open(encoding="utf-8", newline="") as handle:
+    reader = csv.DictReader(handle)
+    assert reader.fieldnames == FIELDS
+    integrated_rows = list(reader)
+integrated_metadata = [json.loads(line) for line in (INTEGRATED_DIR / "metadata.jsonl")
+                       .read_text(encoding="utf-8").splitlines()]
+input_rows = [row for name in ("dolly", "freshqa") for row in read_source(PREPARED_DIR, name)["rows"]]
+assert len(integrated_rows) == len(input_rows) == len(integrated_metadata)
+assert [row["id"] for row in integrated_rows] == [record["id"] for record in integrated_metadata]
+assert len({row["id"] for row in integrated_rows}) == len(integrated_rows)
+for original, merged, meta in zip(input_rows, integrated_rows, integrated_metadata, strict=True):
+    assert all(original[field] == merged[field] for field in ("id", "prompt", "user_context"))
+    assert merged["route"] in ROUTES
+    assert meta["input_group_id"] == group_key(merged)
+print("Integrated records:", len(integrated_rows))
+print("Assigned routes:", sum(bool(row["route"]) for row in integrated_rows))
+print("Repeated input groups:", integration_audit["repeated_input_groups"])
+print("Cross-source groups:", integration_audit["cross_source_repeated_input_groups"])
 """)
 add("markdown", """
 ## Output
 
-Separate annotation tables are in `data/prepared/`. No routes have been assigned.
+Combined candidates are in `data/integrated/queries.csv`. Selection and route annotation follow.
 """)
 
 notebook = {"cells": cells, "metadata": {

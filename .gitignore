@@ -9,6 +9,7 @@ dist/
 data/raw/
 data/cleaned/
 data/prepared/
+data/integrated/
 artifacts/
 .env
 .env.*
