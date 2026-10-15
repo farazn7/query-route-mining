@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+data/raw/
+data/cleaned/
+data/prepared/
+artifacts/
+.env
+.env.*
+!.env.example
+
+# Internal planning and conversation work log stay local.
+docs/

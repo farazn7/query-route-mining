@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "query-route-mining"
+version = "0.1.0"
+description = "Frequent pattern mining and classification experiments for assistant query routing."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{name = "farazn7"}]
+
+[project.optional-dependencies]
+notebook = ["ipykernel==7.4.0", "jupyterlab==4.6.4"]
+
+[tool.setuptools]
+packages = []

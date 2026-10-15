@@ -1,0 +1,3 @@
+# Interactive notebook tools; data scripts use only the standard library.
+ipykernel==7.4.0
+jupyterlab==4.6.4
